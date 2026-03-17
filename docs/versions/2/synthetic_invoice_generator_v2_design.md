@@ -38,6 +38,7 @@ Base definitions, logical constraints, and value spaces are externalized entirel
 Because fields depend on other fields (e.g., `line_total` depends on `quantity`), the generation engine must construct a **Directed Acyclic Graph (DAG)** of all fields in `constraints.yaml`.
 - The engine computes the topological order of generation.
 - If a cycle is detected during DAG construction, a `CyclicalDependencyError` is raised immediately before generation starts.
+- Before generating user fields, the Engine silently injects forensic trace metadata (e.g., `_batch_id`, `_sequence_num`) into the base `context_record`, allowing every exported JSON/CSV file to be definitively tracked back to a specific generator execution. 
 - Fields with no `dependencies` (e.g., `issue_date`) are evaluated first.
 
 > *Implementation Hint: When evaluating AST `computed` strings or `rules` via the `asteval` sandbox later in the pipeline, the engine must dynamically inject the previously generated fields from the master `context_record` dictionary directly into the evaluator's `symtable`. This is what allows a raw python string like `"quantity * unit_price"` to resolve variables safely.*
@@ -272,10 +273,12 @@ mutations:
 ### 5.4 Batch Execution & Anomaly Distributions
 When executing the generator pipeline, you must be able to strictly control the dataset volume and the mathematical ratio of cleanly generated invoices versus mutated (anomalous) invoices.
 
-The application orchestrator (`main.py`) exposes runtime CLI arguments to govern this distribution:
+The application orchestrator (`main.py`) exposes runtime CLI arguments to govern this distribution and ensure strict determinism:
 - `--count` (e.g., `10000`): The total sum of invoices to generate in the batch.
 - `--mutation-rate` (e.g., `0.15`): The percentage (15%) of the total count that should be intercepted by the Mutator Engine. The remaining 85% will pass directly to the I/O layer as pristine "ground truth" Base Records.
 - *(Optional)* `--mutation-strategy` (e.g., `uniform`): Determines how the mutated population is evenly distributed across your various test cases defined in `anomalies.yaml`.
+- *(Optional)* `--seed` (e.g., `42`): **Crucial for Robustness.** Locks the random state for both the Faker engine and native Python libraries. This ensures that engineers can perfectly reproduce a problematic synthetic dataset during QA debugging.
+- *(Optional)* `--preview`: A rapid UX debugging flag that bypasses the bulk I/O Exporters, builds exactly 1 record, and prints the heavily-formatted JSON directly to standard output for immediate YAML iteration feedback.
 
 This allows immediate, command-line scalability to generate a 50,000 document training set with exactly a 10% known error rate for AI benchmarking.
 
