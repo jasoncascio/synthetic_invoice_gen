@@ -38,7 +38,7 @@ python main.py --preview
 Once your configuration is validated via `--preview`, you can execute bulk pipeline generation. The orchestrator allows you to firmly dictate exactly how many invoices are built and what percentage of those invoices contain engineered failures (anomalies).
 
 ```bash
-python main.py --count 5000 --mutation-rate 0.15 --out-dir datasets/
+python main.py --count 5000 --mutation-rate 0.15 --output-dir datasets/
 ```
 In the example above, the engine will construct 5,000 synthetic invoices. Exactly 15% (750 invoices) will intercepted by the Mutator and corrupted according to your `anomalies.yaml` configuration, yielding a mathematically precise dataset for AI training.
 
@@ -48,8 +48,8 @@ In the example above, the engine will construct 5,000 synthetic invoices. Exactl
 | `--count` | The total number of records to generate. | `1` |
 | `--mutation-rate` | A decimal percentage (e.g., `0.10` for 10%) of records to mutate. | `0.0` |
 | `--seed` | A static integer to lock the randomization pools for deterministic QA reproduction. | None |
-| `--out-format` | The schema format of the output files. Choose between `json-files` (individual docs per invoice), `jsonl` (one massive file, separated by newlines), or `json-array` (one massive JSON array). | `json-files` |
-| `--out-dir` | The destination folder for the generated dataset. | `output/` |
+| `--output-format` | The schema format of the output files. Choose between `json-files` (individual docs per invoice), `jsonl` (one massive file, separated by newlines), or `json-array` (one massive JSON array). | `json-files` |
+| `--output-dir` | The destination folder for the generated dataset. | `output/` |
 
 ---
 

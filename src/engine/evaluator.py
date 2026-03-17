@@ -9,8 +9,12 @@ class MissingReferenceError(Exception):
 
 class ASTEvaluator:
     def __init__(self, context_record: Dict[str, Any]):
+        import random
+        import math
         self.context_record = context_record
         self.interpreter = Interpreter()
+        self.interpreter.symtable['random'] = random
+        self.interpreter.symtable['math'] = math
 
     def evaluate(self, expression: str) -> Any:
         # Inject context into symtable before evaluation
