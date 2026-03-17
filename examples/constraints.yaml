@@ -39,4 +39,4 @@ fields:
   subtotal:
     type: decimal
     dependencies: [line_items]
-    computed: "round(sum(float(item['line_total']) for item in line_items), 2)"
+    computed: "round(sum([float(item['line_total']) for item in line_items]), 2)"
