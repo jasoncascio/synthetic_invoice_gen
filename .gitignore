@@ -37,3 +37,4 @@ output/
 
 # Design Documentation
 .design/v1
+.env

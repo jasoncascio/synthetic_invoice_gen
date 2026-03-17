@@ -63,7 +63,7 @@ python scripts/infer_schema.py --input examples/sample.json --out-dir config_out
 
 # OR bypass JSON entirely: provide a raw unformatted PDF explicitly to 
 # the gemini-2.5-flash multi-modal extraction engine!
-export GEMINI_API_KEY="your-api-key"
+# Note: You must have a `.env` file with GEMINI_API_KEY=... in this folder!
 python scripts/infer_schema.py --pdf my_invoice.pdf --out-dir config_output/
 ```
 

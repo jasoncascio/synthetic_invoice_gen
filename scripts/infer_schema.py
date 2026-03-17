@@ -33,7 +33,10 @@ PDF MULTI-MODAL EXTRACTION:
 If you have a raw PDF invoice instead of JSON, you can use the Google Gemini 
 multimodal APIs to natively rip the PDF straight into a YAML schema!
 
-   $ export GEMINI_API_KEY="your-key-here"
+Make sure you create a `.env` file in the project root containing your API key:
+   GEMINI_API_KEY="your-key-here"
+
+Then run:
    $ python scripts/infer_schema.py --pdf examples/real_invoice.pdf --out-dir config_output/
 
 --------------------------------------------------------------------------------
@@ -152,12 +155,14 @@ def main():
     if args.pdf:
         try:
             from google import genai
+            from dotenv import load_dotenv
+            load_dotenv()
         except ImportError:
-            print("[Error] The google-genai package is missing. Please `pip install google-genai`.")
+            print("[Error] The google-genai or python-dotenv package is missing. Please `pip install -r requirements.txt`.")
             sys.exit(1)
             
         if "GEMINI_API_KEY" not in os.environ:
-            print("[Error] The GEMINI_API_KEY environment variable must be set to parse PDFs.")
+            print("[Error] The GEMINI_API_KEY environment variable was not found in your environment or a `.env` file.")
             sys.exit(1)
             
         client = genai.Client()
