@@ -11,9 +11,9 @@ from src.engine.dag_builder import CyclicalDependencyError
 
 def main():
     parser = argparse.ArgumentParser(description="Synthetic Invoice Generator V2")
-    parser.add_argument("--config", type=str, default="constraints.yaml", help="Path to constraints.yaml")
-    parser.add_argument("--anomalies", type=str, default="anomalies.yaml", help="Path to anomalies.yaml")
-    parser.add_argument("--value-spaces", type=str, default="value_spaces.yaml", help="Path to value spaces")
+    parser.add_argument("--config", type=str, default="examples/constraints.yaml", help="Path to constraints.yaml")
+    parser.add_argument("--anomalies", type=str, default="examples/anomalies.yaml", help="Path to anomalies.yaml")
+    parser.add_argument("--value-spaces", type=str, default="examples/value_spaces.yaml", help="Path to value spaces")
     
     parser.add_argument("--count", type=int, default=10, help="Number of records to generate")
     parser.add_argument("--mutation-rate", type=float, default=0.0, help="Percentage of records to randomly mutate (0.0 - 1.0)")

@@ -14,8 +14,8 @@ the Python data types, and tweak the mathematical bounds it sets up for you.
 --------------------------------------------------------------------------------
 USAGE INSTRUCTIONS:
 --------------------------------------------------------------------------------
-1. Save your sample invoice as a JSON file, e.g., `sample.json`
-   Example payload inside `sample.json`:
+1. Save your sample invoice as a JSON file, e.g., `examples/sample.json`
+   Example payload inside `examples/sample.json`:
    {
        "invoice_id": "INV-1004",
        "issue_date": "2026-03-01",
@@ -25,7 +25,16 @@ USAGE INSTRUCTIONS:
    }
 
 2. Run the script against your sample:
-   $ python scripts/infer_schema.py --input sample.json --out-dir config_output/
+   $ python scripts/infer_schema.py --input examples/sample.json --out-dir config_output/
+
+--------------------------------------------------------------------------------
+PDF MULTI-MODAL EXTRACTION:
+--------------------------------------------------------------------------------
+If you have a raw PDF invoice instead of JSON, you can use the Google Gemini 
+multimodal APIs to natively rip the PDF straight into a YAML schema!
+
+   $ export GEMINI_API_KEY="your-key-here"
+   $ python scripts/infer_schema.py --pdf examples/real_invoice.pdf --out-dir config_output/
 
 --------------------------------------------------------------------------------
 EXPECTED OUTPUTS:
@@ -129,31 +138,68 @@ def infer_anomalies(json_payload: dict) -> dict:
 
 def main():
     import yaml
+    import sys
     
     parser = argparse.ArgumentParser(description="Infer YAML config from Sample JSON invoice")
-    parser.add_argument("--input", type=str, required=True, help="Path to sample JSON invoice file")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--input", type=str, help="Path to sample JSON invoice file")
+    group.add_argument("--pdf", type=str, help="Path to raw PDF invoice file (Requires GEMINI_API_KEY)")
     parser.add_argument("--out-dir", type=str, default=".", help="Directory to save the generated yaml files")
     args = parser.parse_args()
 
-    # Make output directory safely
     os.makedirs(args.out_dir, exist_ok=True)
     
-    with open(args.input, 'r') as f:
-        payload = json.load(f)
+    if args.pdf:
+        try:
+            from google import genai
+        except ImportError:
+            print("[Error] The google-genai package is missing. Please `pip install google-genai`.")
+            sys.exit(1)
+            
+        if "GEMINI_API_KEY" not in os.environ:
+            print("[Error] The GEMINI_API_KEY environment variable must be set to parse PDFs.")
+            sys.exit(1)
+            
+        client = genai.Client()
+        print(f"Uploading {args.pdf} to Gemini API...")
+        try:
+            uploaded_file = client.files.upload(file=args.pdf)
+            print("Structuring PDF semantic payload via gemini-2.5-flash...")
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=[
+                    uploaded_file,
+                    "You are an expert data extraction agent. Extract all header fields and line items from this invoice into a structured JSON dictionary. The 'line_items' key MUST be an array of objects. Return ONLY valid JSON, wrapped in standard markdown ```json blocks."
+                ]
+            )
+            
+            # Clean markdown formatting from the response
+            raw_text = response.text
+            match = re.search(r'```(?:json)?\s*(.*?)\s*```', raw_text, re.DOTALL | re.IGNORECASE)
+            json_str = match.group(1) if match else raw_text
+                
+            payload = json.loads(json_str)
+            print("[Success] Extracted raw JSON dictionary natively from PDF structure.")
+            
+        except Exception as e:
+            print(f"\n[Error] Failed to process PDF via Gemini: {str(e)}\n")
+            sys.exit(1)
+    else:
+        with open(args.input, 'r') as f:
+            payload = json.load(f)
         
     constraints = infer_constraints(payload)
     anomalies = infer_anomalies(payload)
     
     constraints_path = os.path.join(args.out_dir, "constraints_inferred.yaml")
     with open(constraints_path, 'w') as f:
-        # Avoid aliases in YAML output for clarity
         yaml.dump(constraints, f, sort_keys=False, default_flow_style=False)
         
     anomalies_path = os.path.join(args.out_dir, "anomalies_inferred.yaml")
     with open(anomalies_path, 'w') as f:
         yaml.dump(anomalies, f, sort_keys=False, default_flow_style=False)
         
-    print(f"\n[Success] Schema Auto-Inferred from '{args.input}'")
+    print(f"\n[Success] Schema Auto-Inferred and written to Output Directory:")
     print(f" - Wrote Data Constraints: {constraints_path}")
     print(f" - Wrote Mutator Anomalies: {anomalies_path}\n")
 
