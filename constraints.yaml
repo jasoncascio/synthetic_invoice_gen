@@ -1,0 +1,42 @@
+locale: en_US
+
+fields:
+  invoice_id:
+    type: string
+    generator: "fake.pystr"
+    
+  tax_rate:
+    type: decimal
+    generator: "random.uniform"
+    generator_args: 
+      a: 0.05
+      b: 0.15
+
+  line_items:
+    type: array
+    count_expr: "random.randint(1, 4)"
+    schema:
+      description:
+        type: string
+        generator: "fake.catch_phrase"
+      quantity:
+        type: integer
+        generator: "random.randint"
+        generator_args: 
+          a: 1
+          b: 10
+      unit_price:
+        type: decimal
+        generator: "random.uniform"
+        generator_args: 
+          a: 5.0
+          b: 100.0
+      line_total:
+        type: decimal
+        dependencies: [quantity, unit_price]
+        computed: "round(quantity * unit_price, 2)"
+        
+  subtotal:
+    type: decimal
+    dependencies: [line_items]
+    computed: "round(sum(float(item['line_total']) for item in line_items), 2)"

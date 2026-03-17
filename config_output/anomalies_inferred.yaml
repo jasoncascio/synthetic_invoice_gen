@@ -1,0 +1,6 @@
+mutations:
+- target: invoice_id
+  action: drop
+- target: total_amount
+  action: replace
+  value: 0

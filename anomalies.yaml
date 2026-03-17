@@ -1,0 +1,4 @@
+mutations:
+  - target: "line_items[0].quantity"
+    action: replace
+    value: -10

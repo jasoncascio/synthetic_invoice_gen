@@ -1,0 +1,29 @@
+locale: en_US
+fields:
+  invoice_id:
+    type: string
+    generator: uuid.uuid4
+    example: INV-1004
+  issue_date:
+    type: date
+    generator: fake.date_this_year
+    example: '2026-03-01'
+  customer_name:
+    type: string
+    generator: fake.company
+    example: Acme Corp
+  total_amount:
+    type: decimal
+    generator: random.uniform
+    generator_args:
+      a: 1.0
+      b: 1000.0
+    example: 1500.5
+  is_paid:
+    type: boolean
+    generator: random.choice
+    generator_args:
+      seq:
+      - true
+      - false
+    example: false

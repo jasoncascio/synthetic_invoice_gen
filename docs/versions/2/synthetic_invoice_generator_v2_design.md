@@ -27,6 +27,7 @@ synthetic_invoice_generator_v2/
 │   ├── io/              # Renderers (Jinja/JSON) & Exporters (Local/Zip/GCS)
 │   └── plugins/         # Standardized SyntheticGeneratorPlugin interface
 ├── templates/           # Optional Jinja HTML/CSS layout templates for PDF rendering
+├── scripts/             # Python developer utilities (e.g., auto-infer schema tools)
 ├── main.py              # CLI Orchestrator and application entrypoint
 └── requirements.txt
 ```
@@ -100,7 +101,12 @@ fields:
     plugin: "custom_plugins.DiscountCalculator"
 ```
 
-### 4.5 Consolidated YAML Example
+### 4.5 Nested Arrays and Objects (`type: array`)
+The engine recursively builds and evaluates topological structures natively. Instead of relying exclusively on Python Plugins for multi-line JSON structures (like `line_items`), you can explicitly declare `type: array` or `type: object`.
+*   **Recursive Schema**: You must provide a nested `schema` dictionary of field constraints. The internal variables will mathematically compute against each other safely within their local scope.
+*   **Dynamic Count**: By assigning a `count_expr` (e.g., `random.randint(1,4)`), the generator will natively evaluate your randomizer loops.
+
+### 4.6 Consolidated YAML Example
 Putting it all together, the exact reference specification looks like the following. Notice how the `constraints.yaml` maps beautifully to the optional `value_spaces.yaml` dictionary.
 
 ```yaml
@@ -179,7 +185,7 @@ fields:
     example: 200.00
 ```
 
-### 4.6 Complete YAML Parameter Dictionary
+### 4.7 Complete YAML Parameter Dictionary
 
 The following table provides an exhaustive list of all reserved keys allowed within the `constraints.yaml` structure.
 
@@ -192,7 +198,7 @@ The following table provides an exhaustive list of all reserved keys allowed wit
 **Field-Level Keys (Nested under `fields.<field_name>`)**
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `type` | *String* | Yes | The target output type. Valid values: `string`, `integer`, `decimal`, `date`, `boolean`, `static`. |
+| `type` | *String* | Yes | The target output type. Valid values: `string`, `integer`, `decimal`, `date`, `boolean`, `static`, `array`, `object`. |
 | `value` | *Any* | Conditional | Required only if `type` is `static`. Hardcodes the final output value immediately. |
 | `example` | *Any* | No | Passive metadata used exclusively for populating exported OpenAPI/JSON schemas. Ignored during data generation. |
 | `dependencies` | *List[String]* | Conditional | A specifically ordered list of other field keys that must be securely generated *before* this field can evaluate its constraints or expressions. Required if `computed`, `rules`, or `plugin` references other fields. |
@@ -201,8 +207,10 @@ The following table provides an exhaustive list of all reserved keys allowed wit
 | `rules` | *List[String]* | No | A list of bounding validations evaluating sequentially. Generators will internally retry until all rules pass or a timeout occurs. |
 | `computed` | *String* | Conditional | Evaluates an AST math string natively in place of a generator. Cannot be used simultaneously with `generator`. |
 | `plugin` | *String* | Conditional | Overrides `generator` and `computed` to yield execution fully to a custom Python `SyntheticGeneratorPlugin` class natively imported via dot-notation. |
+| `schema` | *Dictionary* | Conditional | A nested dictionary defining sub-fields. Strictly required if `type` is `array` or `object`. |
+| `count_expr` | *String* | Conditional | An AST evaluated string dictating dynamic array length (e.g. `random.randint(1, 4)`). Strictly required if `type` is `array`. |
 
-### 4.7 Actionable Exceptions & Debugging
+### 4.8 Actionable Exceptions & Debugging
 To guarantee a frictionless setup experience for domain experts, the CLI is strictly designed to throw **actionable exceptions** during the Pydantic validation and DAG construction phases—catching errors *before* generation even starts. When an exception is raised, the console log must proactively explicitly suggest how to fix it.
 
 > [!CAUTION]
@@ -261,6 +269,16 @@ Simply pops the key out of the final JSON dictionary payload. When the Jinja HTM
 mutations:
   - target: supplier_identifier
     action: drop
+```
+
+#### 4. The JSONPath Nested Targeter
+Because the base configuration supports natively generated nested lists, the Mutator handles JSONPath bracket/dot notation natively via the `target` parameter string. This gracefully allows intercepting very specific sub-items downstream without corrupting your global layout architecture.
+- *Use Case*: Forcing a mathematical mismatch explicitly on the third line item generated.
+```yaml
+mutations:
+  - target: "line_items[2].quantity"
+    action: replace
+    value: 0
 ```
 
 ### 5.3 Mutator Common Gotchas
