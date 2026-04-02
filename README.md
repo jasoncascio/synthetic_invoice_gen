@@ -120,6 +120,12 @@ Computed fields use the `asteval` library, running a safe subset of Python. You 
 > [!NOTE]
 > If you reference a variable in your `computed` string without declaring it in `dependencies`, the engine will throw a domain-specific `MissingReferenceError` rather than a raw Python traceback.
 
+#### 🌍 Regionalization & Localization
+
+The engine natively inherits `Faker`'s localization suite. By changing the top-level `locale` key in your `constraints.yaml`, all `fake.xxxx` generator calls (names, addresses, websites) will automatically shift to that language profile.
+
+To localize static values (like specific VAT rates or localized static text), the recommended pattern is to maintain separate `constraints_<region>.yaml` files for each target market.
+
 #### 📂 Example `constraints.yaml`
 
 ```yaml
