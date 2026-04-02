@@ -88,7 +88,11 @@ def main():
                 if args.mutation_rate > 0.0 and action_registry:
                     import random
                     if random.random() < args.mutation_rate:
-                        record = action_registry.mutate(record)
+                        unmutated = record  # Save reference to unmutated state
+                        record = action_registry.mutate(unmutated)
+                        # Only attach ground truth if a mutation actually took place
+                        if record.get("_scenario_label") == "mutated":
+                            record["_ground_truth"] = unmutated
                     else:
                         record["_scenario_label"] = "clean"
                 else:

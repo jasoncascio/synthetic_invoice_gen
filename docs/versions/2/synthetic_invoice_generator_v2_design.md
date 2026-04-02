@@ -26,7 +26,7 @@ synthetic_invoice_generator_v2/
 │   ├── mutator/         # ActionRegistry (drop, replace, modify handlers)
 │   ├── io/              # Renderers (Jinja/JSON) & Exporters (Local/Zip/GCS)
 │   └── plugins/         # Standardized SyntheticGeneratorPlugin interface
-├── templates/           # Optional Jinja HTML/CSS layout templates for PDF rendering
+├── templates/           # (Future Plan) Optional Jinja HTML/CSS layout templates for PDF rendering
 ├── scripts/             # Python developer utilities (e.g., auto-infer schema tools)
 ├── main.py              # CLI Orchestrator and application entrypoint
 └── requirements.txt
@@ -313,9 +313,12 @@ class BaseRenderer(ABC):
 ```
 
 - **`JSONRenderer`**: Uses `json.dumps()` (handling date serialization) to yield `.json` bytes.
-- **`JinjaPDFRenderer`**: Ingests HTML templates and CSS from a configured `template_dir/`. It feeds the `record` dict to `jinja2.Environment().render()` and passes the HTML string to `weasyprint.HTML().write_pdf()`.
+- **`JinjaPDFRenderer`** *(Future Plan)*: Converts structured records into visual PDFs. We have three architectural paths for this:
+  - **Option 1: WeasyPrint (Modern & Beautiful)**: Uses modern CSS3 (Flexbox/Grid), yielding premium outputs. Requires some system binaries (`pango`, `cairo`).
+  - **Option 2: xhtml2pdf (Fast & Zero System Setup)**: Pure Python, installs instantly with `pip`. Uses older HTML schema (requires table-based layouts, no modern CSS flexbox).
+  - **Option 3: ReportLab (Programmatic)**: Pure Python, fast and reliable. Programmatic drawing (requires x/y coordinates), hard to template visually without excessive code.
 
-## 7. Auto-Generative Output Schema (JSON Schema)
+## 7. Auto-Generative Output Schema (JSON Schema) *(Future Plan)*
 To provide a strict, predictable contract for downstream consumers (like databases or AI validation pipelines), the architecture automatically guarantees schema alignment without requiring end-users to manage multiple files.
 
 Because the `constraints.yaml` intrinsically defines every field's data structure via the `type:` key (e.g., `integer`, `string`, `decimal`), the configuration *is* the schema. 
@@ -337,8 +340,9 @@ class BaseExporter(ABC):
 
 **Supported Exporters:**
 1. **`LocalFileExporter`**: Writes standard output to a mapped `/output` volume.
-2. **`ZipArchiveExporter`**: Keeps an open stream to a `zipfile.ZipFile` in memory and writes directly to members. Excellent for shipping datasets cleanly.
-3. **`GCSExporter`**: Utilizes the initialized `google-cloud-storage` client to asynchronously upload chunks to `gs://bucket-name/folder/filename`.
+2. **`SingleFileBytesExporter`**: Appends streams for writing large JSON Line or JSON Array aggregates sequentially.
+3. **`ZipArchiveExporter`** *(Future Plan)*: Keeps an open stream to a `zipfile.ZipFile` in memory and writes directly to members.
+4. **`GCSExporter`** *(Future Plan)*: Utilizes the initialized `google-cloud-storage` client to asynchronously upload chunks to `gs://bucket-name/folder/filename`.
 
 ## 9. Technology Stack & Setup Experience
 The setup experience is specifically designed to be highly standardized, clean, and DRY (Don't Repeat Yourself). The entire application installs natively into a standard Python `venv` via `requirements.txt` or `pyproject.toml` without requiring complex manual OS configurations or binary compilations.
