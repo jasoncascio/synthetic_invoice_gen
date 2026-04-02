@@ -27,6 +27,7 @@ htmlcov/
 # IDEs
 .vscode/
 *.code-workspace
+synthetic_invoice_gen.code-workspace
 .idea/
 .DS_Store
 

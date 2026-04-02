@@ -2,6 +2,8 @@
 
 This document outlines how to install the project, execute the core generator pipeline, and test the outputs securely on your local machine.
 
+📖 **Architecture & Design**: For a deep dive into the system architecture and future roadmap, see the **[System Design Document](docs/versions/2/synthetic_invoice_generator_v2_design.md)**.
+
 ---
 
 ## 1. Quick Start Installation
