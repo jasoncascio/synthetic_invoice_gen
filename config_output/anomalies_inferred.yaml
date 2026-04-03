@@ -1,6 +1,16 @@
 mutations:
-- target: invoice_id
-  action: drop
-- target: total_amount
+- target: totals.payable_amount
   action: replace
-  value: 0
+  value: 4500.0
+  value_computation: Modify the total payable amount to be different from the sum
+    of line items to simulate an arithmetic error.
+- target: currency
+  action: replace
+  value: EUR
+  value_computation: Change the currency from DKK to EUR to simulate a currency mismatch
+    error.
+- target: due_date
+  action: replace
+  value: '2025-10-15'
+  value_computation: Change the due date to a date prior to the invoice date (2025-10-29)
+    to test date validation logic.

@@ -171,10 +171,10 @@ def main():
             uploaded_file = client.files.upload(file=args.pdf)
             print("Structuring PDF semantic payload via gemini-2.5-flash...")
             response = client.models.generate_content(
-                model='gemini-2.5-flash',
+                model='gemini-3.1-pro-preview',
                 contents=[
                     uploaded_file,
-                    "You are an expert data extraction agent. Extract all header fields and line items from this invoice into a structured JSON dictionary. The 'line_items' key MUST be an array of objects. Return ONLY valid JSON, wrapped in standard markdown ```json blocks."
+                    "You are an expert data extraction agent. Extract all header fields and line items from this invoice into a structured JSON dictionary under a 'payload' key. ALSO suggest 3 reasonable anomaly mutations (as a list of objects matching our MutationRule schema with keys 'target', 'action', 'value', 'value_computation') under a 'suggested_anomalies' key. AND identify any fields that should be backed by a value space (list of allowed entries) under a 'suggested_value_spaces' key (which should be a dictionary of lists). Return ONLY valid JSON, wrapped in standard markdown ```json blocks."
                 ]
             )
             
@@ -183,8 +183,17 @@ def main():
             match = re.search(r'```(?:json)?\s*(.*?)\s*```', raw_text, re.DOTALL | re.IGNORECASE)
             json_str = match.group(1) if match else raw_text
                 
-            payload = json.loads(json_str)
-            print("[Success] Extracted raw JSON dictionary natively from PDF structure.")
+            full_response = json.loads(json_str)
+            if isinstance(full_response, dict) and "payload" in full_response:
+                payload = full_response["payload"]
+                anomalies = {"mutations": full_response.get("suggested_anomalies", [])}
+                value_spaces = full_response.get("suggested_value_spaces", {})
+            else:
+                payload = full_response
+                anomalies = infer_anomalies(payload)
+                value_spaces = {}
+                
+            print("[Success] Extracted structured payload from PDF.")
             
         except Exception as e:
             print(f"\n[Error] Failed to process PDF via Gemini: {str(e)}\n")
@@ -192,9 +201,10 @@ def main():
     else:
         with open(args.input, 'r') as f:
             payload = json.load(f)
+        anomalies = infer_anomalies(payload)
+        value_spaces = {}
         
     constraints = infer_constraints(payload)
-    anomalies = infer_anomalies(payload)
     
     constraints_path = os.path.join(args.out_dir, "constraints_inferred.yaml")
     with open(constraints_path, 'w') as f:
@@ -204,9 +214,14 @@ def main():
     with open(anomalies_path, 'w') as f:
         yaml.dump(anomalies, f, sort_keys=False, default_flow_style=False)
         
+    value_spaces_path = os.path.join(args.out_dir, "value_spaces_inferred.yaml")
+    with open(value_spaces_path, 'w') as f:
+        yaml.dump(value_spaces, f, sort_keys=False, default_flow_style=False)
+        
     print(f"\n[Success] Schema Auto-Inferred and written to Output Directory:")
     print(f" - Wrote Data Constraints: {constraints_path}")
-    print(f" - Wrote Mutator Anomalies: {anomalies_path}\n")
+    print(f" - Wrote Mutator Anomalies: {anomalies_path}")
+    print(f" - Wrote Value Spaces: {value_spaces_path}\n")
 
 if __name__ == "__main__":
     main()

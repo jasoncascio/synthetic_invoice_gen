@@ -1,0 +1,18 @@
+currency:
+- DKK
+- EUR
+- USD
+- GBP
+- NOK
+- SEK
+line_items.[*].unit:
+- EA
+- HR
+- DAY
+- KG
+- LBS
+tax_details.[*].category:
+- VAT:O
+- VAT:S
+- VAT:E
+- VAT:Z

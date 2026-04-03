@@ -1,29 +1,52 @@
 locale: en_US
 fields:
-  invoice_id:
+  invoice_number:
     type: string
-    generator: uuid.uuid4
-    example: INV-1004
-  issue_date:
+    generator: fake.word
+    example: '4000000463'
+  invoice_date:
     type: date
     generator: fake.date_this_year
-    example: '2026-03-01'
-  customer_name:
+    example: '2025-10-29'
+  due_date:
+    type: date
+    generator: fake.date_this_year
+    example: '2025-10-31'
+  buyer_reference:
     type: string
-    generator: fake.company
-    example: Acme Corp
-  total_amount:
-    type: decimal
-    generator: random.uniform
-    generator_args:
-      a: 1.0
-      b: 1000.0
-    example: 1500.5
-  is_paid:
-    type: boolean
-    generator: random.choice
-    generator_args:
-      seq:
-      - true
-      - false
-    example: false
+    generator: fake.word
+    example: DFM Customer Additional Info RTP
+  currency:
+    type: string
+    generator: fake.word
+    example: DKK
+  supplier:
+    type: static
+    value: '{''name'': ''Accenture A/S'', ''address'': ''Bohrsgade 35, 1799 Copenhagen
+      V, Denmark'', ''identifier'': ''0184:DK13227500''}'
+  customer:
+    type: static
+    value: '{''name'': ''Pegasus Production A/S'', ''address'': ''Vestergrade 10B
+      1456 Copenhagen K, 1456 Copenhagen, Denmark'', ''identifier'': ''0184:DK41472561''}'
+  delivery:
+    type: static
+    value: '{''date'': ''2025-10-29'', ''location_id'': ''DK41472561'', ''address'':
+      ''Vestergrade 10B 1456 Copenhagen K, 1456 Copenhagen, Denmark''}'
+  totals:
+    type: static
+    value: '{''tax_exclusive_amount'': 4100.0, ''tax_inclusive_amount'': 4100.0, ''payable_amount'':
+      4100.0, ''tax_amount'': 0.0}'
+  tax_details:
+    type: static
+    value: '[{''category'': ''VAT:O'', ''tax_rate_percent'': 0.0, ''taxable_amount'':
+      4100.0, ''tax_amount'': 0.0}]'
+  payment_details:
+    type: static
+    value: '{''payment_id'': ''4000000463'', ''account'': ''DK8752950012000006'',
+      ''payment_terms'': ''Payment due by 31.10.2025 . Late payment interest will
+      be calculated according to contract.''}'
+  line_items:
+    type: static
+    value: '[{''line_number'': ''000010'', ''description'': ''Services'', ''item_code'':
+      ''S40000'', ''quantity'': 1.0, ''unit'': ''EA'', ''unit_price'': 4100.0, ''tax_rate_percent'':
+      0.0, ''line_total'': 4100.0}]'
